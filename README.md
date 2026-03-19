@@ -43,7 +43,7 @@ Browser → React (3000) → FastAPI (8000) → PostgreSQL
 | Frontend | React + Vite | Fast SPA, streaming responses |
 | Backend | FastAPI | Async Python, auto API docs |
 | KPI Engine | Pandas | Deterministic, fast analytics |
-| Vector Store | FAISS + sentence-transformers | Local, no API key needed |
+| Vector Store | ChromaDB + sentence-transformers | Local, no API key needed |
 | LLM | Llama 3 via Ollama | Free local inference |
 | DB | PostgreSQL | Structured metrics storage |
 | Cloud | AKS (Azure) | Free student credits |
