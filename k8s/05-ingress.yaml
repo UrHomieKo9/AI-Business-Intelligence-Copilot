@@ -1,0 +1,34 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: bizcopilot-ingress
+  namespace: bizcopilot
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    nginx.ingress.kubernetes.io/proxy-read-timeout: "300"
+    nginx.ingress.kubernetes.io/proxy-send-timeout: "300"
+    # Enable if you add cert-manager for HTTPS:
+    # cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  rules:
+    - host: bizcopilot.yourdomain.com   # Replace with your domain or AKS public IP
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: backend-svc
+                port:
+                  number: 8000
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend-svc
+                port:
+                  number: 80
+  # tls:
+  #   - hosts:
+  #       - bizcopilot.yourdomain.com
+  #     secretName: bizcopilot-tls

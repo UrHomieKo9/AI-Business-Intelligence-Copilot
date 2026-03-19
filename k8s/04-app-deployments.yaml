@@ -1,0 +1,113 @@
+# ── BACKEND ──────────────────────────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: backend
+  namespace: bizcopilot
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: backend
+  template:
+    metadata:
+      labels:
+        app: backend
+    spec:
+      containers:
+        - name: backend
+          image: YOUR_ACR.azurecr.io/bizcopilot-backend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 8000
+          env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  name: bizcopilot-secrets
+                  key: DATABASE_URL
+            - name: SECRET_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: bizcopilot-secrets
+                  key: SECRET_KEY
+            - name: OLLAMA_BASE_URL
+              value: "http://ollama-svc:11434"
+            - name: OLLAMA_MODEL
+              value: "phi3:mini"
+            - name: VECTOR_STORE_DIR
+              value: "/data/vectors"
+          volumeMounts:
+            - name: vector-storage
+              mountPath: /data/vectors
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8000
+            initialDelaySeconds: 10
+            periodSeconds: 5
+          resources:
+            requests:
+              memory: "512Mi"
+              cpu: "250m"
+            limits:
+              memory: "1Gi"
+              cpu: "500m"
+      volumes:
+        - name: vector-storage
+          persistentVolumeClaim:
+            claimName: vector-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend-svc
+  namespace: bizcopilot
+spec:
+  selector:
+    app: backend
+  ports:
+    - port: 8000
+      targetPort: 8000
+---
+# ── FRONTEND ─────────────────────────────────────────────────────────────────
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: frontend
+  namespace: bizcopilot
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: frontend
+  template:
+    metadata:
+      labels:
+        app: frontend
+    spec:
+      containers:
+        - name: frontend
+          image: YOUR_ACR.azurecr.io/bizcopilot-frontend:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 80
+          resources:
+            requests:
+              memory: "64Mi"
+              cpu: "50m"
+            limits:
+              memory: "128Mi"
+              cpu: "100m"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend-svc
+  namespace: bizcopilot
+spec:
+  selector:
+    app: frontend
+  ports:
+    - port: 80
+      targetPort: 80
